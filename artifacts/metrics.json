@@ -1,0 +1,80 @@
+{
+  "schema_version": 2,
+  "seed": 7,
+  "vocab_size": 64,
+  "parameter_count": 14560,
+  "gradient_check": {
+    "weight": [49, 26],
+    "autograd": 0.500315215386476,
+    "finite_difference": 0.5003152154348101,
+    "absolute_error": 4.833400346626604e-11,
+    "relative_error": 9.660710284182164e-11
+  },
+  "gradient_accumulation": {
+    "short_tokens": 96,
+    "long_tokens": 384,
+    "wrong_final_validation_loss": 3.0241525173187256,
+    "correct_final_validation_loss": 2.9805386066436768,
+    "wrong_minus_correct_gap": 0.04361391067504883,
+    "reference_gradient_proof": {
+      "proof_short_tokens": 96,
+      "proof_long_tokens": 384,
+      "same_distribution": true,
+      "correct_cosine_similarity": 1.0,
+      "correct_max_abs_error": 0.0,
+      "correct_relative_l2_error": 0.0,
+      "wrong_cosine_similarity": 0.9212467670440674,
+      "wrong_max_abs_error": 0.05237473174929619,
+      "wrong_relative_l2_error": 0.43570855259895325
+    }
+  },
+  "grad_norm_leading_signal": {
+    "step": 57,
+    "relative_grad_norm_move": 0.14375770646762331,
+    "same_step_probe_loss_move": 0.0003842077125476726,
+    "next_3_step_probe_loss_move": 0.007433037979747107,
+    "trace_steps": 90
+  },
+  "mfu": {
+    "device": "cpu",
+    "seconds_per_step": 0.0027999964999973295,
+    "tokens_per_second": 182857.37142903154,
+    "estimated_model_tflops": 0.013481708280719637,
+    "empirical_gemm_ceiling_tflops": 0.22875639412915513,
+    "empirical_ceiling_utilization": 0.05893478226933367,
+    "reported_mfu": 0.022896923031113514,
+    "mfu_kind": "analytical allocated-CPU roofline MFU estimate",
+    "reported_peak_tflops": 0.5888,
+    "reported_peak_source": "analytical allocated-CPU FP32 roofline: 4 PyTorch threads × 2.300 GHz × 16 fp32 lanes (AVX-512) × 2 FLOP/lane-instruction × 2 assumed vector issue units/core",
+    "cpu_roofline_details": {
+      "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "detected_mhz": 2300.0,
+      "simd_fp32_lanes": 16,
+      "assumed_vector_issue_units_per_core": 2,
+      "pytorch_threads": 4
+    },
+    "gap_to_40_percentage_points": 37.71030769688865,
+    "batch_size_sweep": [
+      {"batch_size": 4, "seconds_per_step": 0.0016869508125125776, "tokens_per_second": 75876.54545146713, "tflops": 0.005594225943045769, "mfu": 0.009501063082618492},
+      {"batch_size": 8, "seconds_per_step": 0.0019154098125113705, "tokens_per_second": 133652.86025362278, "tflops": 0.0098539580807791, "mfu": 0.0167356625013232},
+      {"batch_size": 16, "seconds_per_step": 0.0023044980000008763, "tokens_per_second": 222174.2001944915, "tflops": 0.01638045943193947, "mfu": 0.027820073763484155},
+      {"batch_size": 32, "seconds_per_step": 0.0032925852500227393, "tokens_per_second": 311001.81840179476, "tflops": 0.022929542067127526, "mfu": 0.03894283639118126},
+      {"batch_size": 64, "seconds_per_step": 0.00458955918750803, "tokens_per_second": 446230.2187047276, "tflops": 0.032899661564662154, "mfu": 0.055875783907374584}
+    ],
+    "best_sweep_batch_size": 64,
+    "best_sweep_tflops": 0.032899661564662154,
+    "best_sweep_mfu": 0.055875783907374584
+  },
+  "float_0_1": {
+    "fp32_bits": "00111101110011001100110011001101",
+    "bf16_bits": "0011110111001101",
+    "fp8_e4m3fn_bits": "00011101",
+    "fp32_value": 0.10000000149011612,
+    "bf16_value": 0.10009765625,
+    "fp8_e4m3fn_value": 0.1015625,
+    "fp32_absolute_error": 1.4901161138336505e-09,
+    "bf16_absolute_error": 9.765624999999445e-05,
+    "fp8_e4m3fn_absolute_error": 0.0015624999999999944,
+    "recommended_training_format": "bf16"
+  }
+}
