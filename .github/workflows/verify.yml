@@ -1,0 +1,28 @@
+name: Verify training-loop experiments
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Execute notebook and run consistency checks
+        run: |
+          mkdir -p /tmp/training-loop-ci
+          rsync -a --exclude='.git' ./ /tmp/training-loop-ci/
+          cd /tmp/training-loop-ci
+          jupyter nbconvert \
+            --to notebook \
+            --execute training_loop_truth.ipynb \
+            --output training_loop_truth.ci.ipynb \
+            --ExecutePreprocessor.timeout=300
+          mv training_loop_truth.ci.ipynb training_loop_truth.ipynb
+          python verify_assignment.py
