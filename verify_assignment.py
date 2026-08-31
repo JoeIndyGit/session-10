@@ -1,19 +1,25 @@
 from pathlib import Path
 import json
 import math
+import os
 import nbformat
 
 root = Path(__file__).parent
 metrics_path = root / "artifacts" / "metrics.json"
 metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
 
-# Schema guard: CI must regenerate the current evidence layout.
+# Schema guard: the checked metrics must match the current experiment layout.
 assert metrics.get("schema_version") == 2, "Stale metrics schema: execute the notebook again."
 
 # 1) Numerical derivative must agree with autograd.
 grad = metrics["gradient_check"]
 assert grad["relative_error"] < 1e-6
-assert abs(grad["autograd"] - grad["finite_difference"]) == grad["absolute_error"]
+assert math.isclose(
+    abs(grad["autograd"] - grad["finite_difference"]),
+    grad["absolute_error"],
+    rel_tol=1e-9,
+    abs_tol=1e-15,
+)
 
 # 2) Accumulation must truly involve unequal token counts and show a practical consequence.
 acc = metrics["gradient_accumulation"]
@@ -74,35 +80,48 @@ assert f["fp8_e4m3fn_bits"] == "00011101"
 assert f["fp32_absolute_error"] < f["bf16_absolute_error"] < f["fp8_e4m3fn_absolute_error"]
 assert f["recommended_training_format"].lower() == "bf16"
 
-# 7) Required repository artifacts must exist and be non-empty.
-required = [
+# 7) Core repository files must always be present.
+core_required = [
     root / "training_loop_truth.ipynb",
+    root / "training_loop_experiments.py",
     root / "README.md",
+    root / "artifacts" / "metrics.json",
+    root / ".github" / "workflows" / "verify.yml",
+]
+for path in core_required:
+    assert path.exists(), f"Missing required file: {path.relative_to(root)}"
+    assert path.stat().st_size > 0, f"Empty required file: {path.relative_to(root)}"
+
+# Generated plots are required after a clean CI execution, but do not have to be committed as binaries.
+generated = [
     root / "artifacts" / "gradient_accumulation_wrong_vs_correct.png",
     root / "artifacts" / "gradient_reference_proof.png",
     root / "artifacts" / "grad_norm_leading_signal.png",
     root / "artifacts" / "mfu_batch_sweep.png",
     root / "artifacts" / "experiment_summary.png",
-    root / ".github" / "workflows" / "verify.yml",
 ]
-for path in required:
-    assert path.exists(), f"Missing required artifact: {path.relative_to(root)}"
-    assert path.stat().st_size > 0, f"Empty required artifact: {path.relative_to(root)}"
+if os.environ.get("CI"):
+    for path in generated:
+        assert path.exists(), f"Notebook did not generate: {path.relative_to(root)}"
+        assert path.stat().st_size > 0, f"Generated artifact is empty: {path.relative_to(root)}"
 
-# 8) Notebook source must contain the required experiments and be fully executed.
+# 8) Notebook is the executable entry point; implementation remains readable in the companion script.
 nb = nbformat.read(root / "training_loop_truth.ipynb", as_version=4)
-all_source = "\n".join(cell.source for cell in nb.cells)
+notebook_source = "\n".join(cell.source for cell in nb.cells)
+script_source = (root / "training_loop_experiments.py").read_text(encoding="utf-8")
+all_source = notebook_source + "\n" + script_source
 for needle in (
     "reference_gradient_proof",
     "same_distribution",
     "batch_size_sweep",
-    "cpu_roofline_peak_tflops",
+    "reported_peak_source",
     "fp32_absolute_error",
     "experiment_summary.png",
 ):
-    assert needle in all_source, f"Notebook is missing required source: {needle}"
+    assert needle in all_source, f"Experiment source is missing: {needle}"
 code_cells = [cell for cell in nb.cells if cell.cell_type == "code"]
-assert code_cells and all(cell.execution_count is not None for cell in code_cells), "Notebook is not fully executed."
+assert code_cells and all(cell.execution_count is not None for cell in code_cells), "Notebook entry point is not executed."
+assert "training_loop_experiments.py" in notebook_source, "Notebook must execute the experiment implementation."
 
 print("Assignment verification passed.")
 print(f"Gradient finite-difference relative error: {grad['relative_error']:.3e}")
